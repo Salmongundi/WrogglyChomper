@@ -1,381 +1,518 @@
 
-const COLORS = {
-  lip: "#713344",
-  lipLight: "#a75b6c",
-  lipShadow: "#35141f",
-  mouth: "#080508",
-  mouthDeep: "#020103",
-  gum: "#87394f",
-  gumLight: "#b65d72",
+export const COLORS = {
+  background: "#171116",
+  lip: "#74394d",
+  lipLight: "#a85d72",
+  lipShadow: "#3b1928",
+  mouth: "#080609",
+  mouthDeep: "#020204",
+  gum: "#a84f6b",
+  gumLight: "#d17b91",
   tooth: "#e5d9c5",
-  toothShade: "#a99b8a",
-  toothHighlight: "#fff0d9"
+  toothShade: "#b7a99a",
+  toothHighlight: "#fff3df",
+  text: "#d7bac5",
+  muted: "#bba4ae"
 };
 
 function makeGradient(ctx, x1, y1, x2, y2, stops) {
   const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+
   for (const [position, color] of stops) {
     gradient.addColorStop(position, color);
   }
+
   return gradient;
 }
 
-function drawTooth(ctx, tooth, lower = false) {
-  const { x, y, w, h, tilt = 0, shade = 0 } = tooth;
-
+function drawTooth(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  tilt = 0,
+  lower = false
+) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(tilt);
 
-  // Soft shadow makes the crown sit into the gum rather than float.
-  ctx.beginPath();
-  if (!lower) {
-    ctx.moveTo(-w * 0.56, -3);
-    ctx.quadraticCurveTo(-w * 0.55, h * 0.46, -w * 0.23, h * 0.86);
-    ctx.quadraticCurveTo(0, h * 1.02, w * 0.27, h * 0.80);
-    ctx.quadraticCurveTo(w * 0.55, h * 0.38, w * 0.52, -3);
-  } else {
-    ctx.moveTo(-w * 0.53, 3);
-    ctx.quadraticCurveTo(-w * 0.55, -h * 0.42, -w * 0.22, -h * 0.82);
-    ctx.quadraticCurveTo(0, -h * 0.99, w * 0.25, -h * 0.79);
-    ctx.quadraticCurveTo(w * 0.54, -h * 0.40, w * 0.52, 3);
-  }
-  ctx.closePath();
-  ctx.fillStyle = "rgba(0, 0, 0, 0.62)";
-  ctx.fill();
+  const direction = lower ? -1 : 1;
 
-  // One continuous crown shape, with slightly uneven sides.
   ctx.beginPath();
-  if (!lower) {
-    ctx.moveTo(-w * 0.51, -4);
-    ctx.bezierCurveTo(
-      -w * 0.59, h * 0.18,
-      -w * 0.43, h * 0.69,
-      -w * 0.20, h * 0.88
-    );
-    ctx.quadraticCurveTo(w * 0.04, h * 1.04, w * 0.28, h * 0.81);
-    ctx.bezierCurveTo(
-      w * 0.50, h * 0.57,
-      w * 0.57, h * 0.17,
-      w * 0.47, -4
-    );
-  } else {
-    ctx.moveTo(-w * 0.51, 4);
-    ctx.bezierCurveTo(
-      -w * 0.59, -h * 0.18,
-      -w * 0.43, -h * 0.69,
-      -w * 0.20, -h * 0.88
-    );
-    ctx.quadraticCurveTo(w * 0.04, -h * 1.04, w * 0.28, -h * 0.81);
-    ctx.bezierCurveTo(
-      w * 0.50, -h * 0.57,
-      w * 0.57, -h * 0.17,
-      w * 0.47, 4
-    );
-  }
+  ctx.moveTo(-width * 0.5, 0);
+
+  ctx.bezierCurveTo(
+    -width * 0.52, direction * height * 0.2,
+    -width * 0.35, direction * height * 0.83,
+    -width * 0.15, direction * height
+  );
+
+  ctx.bezierCurveTo(
+    -width * 0.05, direction * height * 1.05,
+    width * 0.05, direction * height * 1.05,
+    width * 0.15, direction * height
+  );
+
+  ctx.bezierCurveTo(
+    width * 0.35, direction * height * 0.83,
+    width * 0.52, direction * height * 0.2,
+    width * 0.5, 0
+  );
+
   ctx.closePath();
 
   ctx.fillStyle = makeGradient(
     ctx,
-    -w * 0.45, 0,
-    w * 0.45, 0,
+    x - width * 0.5,
+    y,
+    x + width * 0.5,
+    y,
     [
-      [0, "#9e907f"],
-      [0.20, COLORS.tooth],
-      [0.53, shade ? "#d2c3ad" : COLORS.toothHighlight],
-      [0.78, COLORS.tooth],
-      [1, "#b2a18e"]
+      [0, "#8e8178"],
+      [0.18, COLORS.toothShade],
+      [0.42, COLORS.toothHighlight],
+      [0.72, COLORS.tooth],
+      [1, "#97887d"]
     ]
   );
+
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(65, 43, 40, 0.72)";
-  ctx.lineWidth = 1.3;
-  ctx.stroke();
-
-  // Shading follows the shape instead of using a bright cartoon shine.
-  ctx.beginPath();
-  if (!lower) {
-    ctx.moveTo(-w * 0.30, 4);
-    ctx.quadraticCurveTo(-w * 0.30, h * 0.40, -w * 0.10, h * 0.70);
-  } else {
-    ctx.moveTo(-w * 0.30, -4);
-    ctx.quadraticCurveTo(-w * 0.30, -h * 0.40, -w * 0.10, -h * 0.70);
-  }
-  ctx.strokeStyle = "rgba(255, 245, 221, 0.48)";
-  ctx.lineWidth = Math.max(1, w * 0.08);
-  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(35, 15, 24, 0.65)";
+  ctx.lineWidth = 1.2;
   ctx.stroke();
 
   ctx.beginPath();
-  if (!lower) {
-    ctx.moveTo(w * 0.27, 3);
-    ctx.quadraticCurveTo(w * 0.33, h * 0.36, w * 0.15, h * 0.65);
+  ctx.moveTo(-width * 0.24, direction * height * 0.12);
+  ctx.quadraticCurveTo(
+    -width * 0.2,
+    direction * height * 0.48,
+    -width * 0.08,
+    direction * height * 0.75
+  );
+
+  ctx.strokeStyle = "rgba(255, 243, 223, 0.45)";
+  ctx.lineWidth = Math.max(1, width * 0.045);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawLipShape(ctx, upper = true) {
+  ctx.beginPath();
+
+  if (upper) {
+    ctx.moveTo(145, 245);
+
+    ctx.bezierCurveTo(
+      185, 194, 230, 167, 284, 161
+    );
+
+    ctx.bezierCurveTo(
+      327, 155, 351, 174, 378, 181
+    );
+
+    ctx.bezierCurveTo(
+      394, 185, 406, 185, 422, 180
+    );
+
+    ctx.bezierCurveTo(
+      450, 170, 478, 155, 520, 162
+    );
+
+    ctx.bezierCurveTo(
+      573, 170, 619, 198, 655, 245
+    );
+
+    ctx.bezierCurveTo(
+      605, 222, 560, 222, 510, 235
+    );
+
+    ctx.bezierCurveTo(
+      466, 247, 433, 255, 400, 255
+    );
+
+    ctx.bezierCurveTo(
+      365, 255, 331, 247, 287, 235
+    );
+
+    ctx.bezierCurveTo(
+      237, 222, 190, 222, 145, 245
+    );
   } else {
-    ctx.moveTo(w * 0.27, -3);
-    ctx.quadraticCurveTo(w * 0.33, -h * 0.36, w * 0.15, -h * 0.65);
+    ctx.moveTo(145, 382);
+
+    ctx.bezierCurveTo(
+      197, 405, 242, 414, 291, 410
+    );
+
+    ctx.bezierCurveTo(
+      337, 406, 368, 398, 400, 398
+    );
+
+    ctx.bezierCurveTo(
+      433, 398, 466, 406, 511, 410
+    );
+
+    ctx.bezierCurveTo(
+      560, 414, 606, 405, 655, 382
+    );
+
+    ctx.bezierCurveTo(
+      623, 431, 577, 465, 523, 480
+    );
+
+    ctx.bezierCurveTo(
+      473, 495, 437, 496, 400, 491
+    );
+
+    ctx.bezierCurveTo(
+      361, 496, 324, 495, 275, 480
+    );
+
+    ctx.bezierCurveTo(
+      222, 465, 176, 431, 145, 382
+    );
   }
-  ctx.strokeStyle = "rgba(92, 64, 54, 0.27)";
+
+  ctx.closePath();
+
+  ctx.fillStyle = makeGradient(
+    ctx,
+    0,
+    upper ? 155 : 380,
+    0,
+    upper ? 260 : 500,
+    [
+      [0, COLORS.lipLight],
+      [0.45, COLORS.lip],
+      [1, COLORS.lipShadow]
+    ]
+  );
+
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(10, 4, 9, 0.8)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function drawGumRidge(ctx, upper = true) {
+  ctx.beginPath();
+
+  if (upper) {
+    ctx.moveTo(178, 234);
+
+    ctx.bezierCurveTo(
+      230, 211, 274, 214, 320, 229
+    );
+
+    ctx.bezierCurveTo(
+      350, 238, 372, 247, 400, 246
+    );
+
+    ctx.bezierCurveTo(
+      428, 247, 450, 238, 480, 229
+    );
+
+    ctx.bezierCurveTo(
+      526, 214, 570, 211, 622, 234
+    );
+
+    ctx.lineTo(622, 256);
+
+    ctx.bezierCurveTo(
+      555, 246, 514, 260, 470, 267
+    );
+
+    ctx.bezierCurveTo(
+      438, 272, 423, 275, 400, 275
+    );
+
+    ctx.bezierCurveTo(
+      377, 275, 362, 272, 330, 267
+    );
+
+    ctx.bezierCurveTo(
+      286, 260, 245, 246, 178, 256
+    );
+  } else {
+    ctx.moveTo(175, 375);
+
+    ctx.bezierCurveTo(
+      235, 399, 282, 395, 326, 389
+    );
+
+    ctx.bezierCurveTo(
+      358, 384, 379, 380, 400, 380
+    );
+
+    ctx.bezierCurveTo(
+      421, 380, 442, 384, 474, 389
+    );
+
+    ctx.bezierCurveTo(
+      518, 395, 565, 399, 625, 375
+    );
+
+    ctx.lineTo(617, 399);
+
+    ctx.bezierCurveTo(
+      561, 418, 516, 411, 471, 404
+    );
+
+    ctx.bezierCurveTo(
+      438, 399, 421, 395, 400, 395
+    );
+
+    ctx.bezierCurveTo(
+      379, 395, 362, 399, 329, 404
+    );
+
+    ctx.bezierCurveTo(
+      284, 411, 239, 418, 183, 399
+    );
+  }
+
+  ctx.closePath();
+  ctx.fillStyle = COLORS.gum;
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(45, 12, 27, 0.75)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+
+  if (upper) {
+    ctx.moveTo(184, 238);
+    ctx.bezierCurveTo(
+      270, 222, 335, 259, 400, 258
+    );
+    ctx.bezierCurveTo(
+      465, 259, 530, 222, 616, 238
+    );
+  } else {
+    ctx.moveTo(184, 390);
+    ctx.bezierCurveTo(
+      270, 408, 335, 386, 400, 386
+    );
+    ctx.bezierCurveTo(
+      465, 386, 530, 408, 616, 390
+    );
+  }
+
+  ctx.strokeStyle = "rgba(239, 143, 169, 0.42)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+
+
+export function drawMouth(ctx) {
+  ctx.save();
+  ctx.translate(400, 265);
+
+  ctx.save();
+  ctx.filter = "blur(12px)";
+  ctx.fillStyle = "#10090d";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 226, 126, -0.025, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.moveTo(-214, -5);
+  ctx.bezierCurveTo(-196, -49, -145, -82, -91, -79);
+  ctx.bezierCurveTo(-55, -77, -30, -94, 0, -87);
+  ctx.bezierCurveTo(30, -94, 61, -74, 99, -78);
+  ctx.bezierCurveTo(158, -78, 200, -43, 215, -8);
+  ctx.bezierCurveTo(205, 29, 158, 69, 99, 83);
+  ctx.bezierCurveTo(51, 94, 22, 82, -5, 86);
+  ctx.bezierCurveTo(-46, 91, -83, 76, -124, 66);
+  ctx.bezierCurveTo(-177, 51, -207, 24, -214, -5);
+  ctx.closePath();
+
+  const lip = ctx.createLinearGradient(0, -95, 0, 95);
+  lip.addColorStop(0, "#684047");
+  lip.addColorStop(0.32, "#48252d");
+  lip.addColorStop(0.65, "#30171e");
+  lip.addColorStop(1, "#75454a");
+  ctx.fillStyle = lip;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-190, -8);
+  ctx.bezierCurveTo(-150, -43, -96, -48, -47, -42);
+  ctx.bezierCurveTo(-20, -38, -11, -47, 4, -43);
+  ctx.bezierCurveTo(47, -49, 100, -42, 151, -25);
+  ctx.bezierCurveTo(174, -15, 182, -4, 174, 12);
+  ctx.bezierCurveTo(148, 42, 94, 54, 48, 51);
+  ctx.bezierCurveTo(15, 48, -9, 59, -42, 51);
+  ctx.bezierCurveTo(-96, 48, -155, 33, -183, 14);
+  ctx.closePath();
+
+  const cavity = ctx.createLinearGradient(0, -45, 0, 58);
+  cavity.addColorStop(0, "#170b10");
+  cavity.addColorStop(0.55, "#080609");
+  cavity.addColorStop(1, "#291017");
+  ctx.fillStyle = cavity;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-174, -13);
+  ctx.bezierCurveTo(-126, -40, -78, -38, -40, -32);
+  ctx.bezierCurveTo(-18, -28, -7, -35, 5, -31);
+  ctx.bezierCurveTo(53, -38, 113, -31, 164, -18);
+  ctx.lineTo(154, -4);
+  ctx.bezierCurveTo(103, -13, 61, -13, 28, -8);
+  ctx.lineTo(8, -5);
+  ctx.lineTo(-8, -8);
+  ctx.bezierCurveTo(-65, -5, -119, -10, -165, 0);
+  ctx.closePath();
+
+  const gum = ctx.createLinearGradient(0, -40, 0, 1);
+  gum.addColorStop(0, "#9a5b60");
+  gum.addColorStop(1, "#593039");
+  ctx.fillStyle = gum;
+  ctx.fill();
+
+  const upperTeeth = [
+    { x: -151, y: -15, w: 25, h: 28, r: -0.17 },
+    { x: -126, y: -22, w: 27, h: 35, r: -0.10 },
+    { x: -98, y: -25, w: 30, h: 38, r: -0.05 },
+    { x: -66, y: -25, w: 29, h: 38, r: 0.03 },
+    { x: -35, y: -24, w: 24, h: 36, r: 0.08 },
+    { x: 18, y: -25, w: 25, h: 36, r: -0.04 },
+    { x: 46, y: -26, w: 29, h: 38, r: -0.02 },
+    { x: 77, y: -24, w: 29, h: 36, r: 0.06 },
+    { x: 108, y: -20, w: 27, h: 32, r: 0.11 },
+    { x: 136, y: -14, w: 24, h: 26, r: 0.16 }
+  ];
+
+  for (const t of upperTeeth) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    ctx.rotate(t.r);
+
+    ctx.beginPath();
+    ctx.moveTo(-t.w / 2, -t.h / 2);
+    ctx.quadraticCurveTo(-t.w * 0.45, -t.h * 0.58, -t.w * 0.12, -t.h / 2);
+    ctx.quadraticCurveTo(t.w * 0.34, -t.h * 0.55, t.w / 2, -t.h * 0.36);
+    ctx.lineTo(t.w * 0.43, t.h * 0.20);
+    ctx.quadraticCurveTo(t.w * 0.32, t.h * 0.57, t.w * 0.05, t.h / 2);
+    ctx.quadraticCurveTo(-t.w * 0.31, t.h * 0.53, -t.w * 0.42, t.h * 0.19);
+    ctx.closePath();
+
+    const enamel = ctx.createLinearGradient(-t.w / 2, 0, t.w / 2, 0);
+    enamel.addColorStop(0, "#93877b");
+    enamel.addColorStop(0.24, "#ded4bd");
+    enamel.addColorStop(0.65, "#c9bea8");
+    enamel.addColorStop(1, "#786b64");
+    ctx.fillStyle = enamel;
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(40, 23, 25, 0.65)";
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-t.w * 0.22, -t.h * 0.30);
+    ctx.quadraticCurveTo(-t.w * 0.04, -t.h * 0.40, t.w * 0.12, -t.h * 0.27);
+    ctx.strokeStyle = "rgba(255, 244, 218, 0.32)";
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(-174, 14);
+  ctx.bezierCurveTo(-125, 38, -72, 42, -33, 39);
+  ctx.bezierCurveTo(6, 46, 39, 40, 78, 37);
+  ctx.bezierCurveTo(119, 33, 154, 23, 174, 10);
+  ctx.bezierCurveTo(155, 42, 104, 53, 54, 53);
+  ctx.bezierCurveTo(16, 57, -14, 56, -48, 51);
+  ctx.bezierCurveTo(-104, 49, -151, 35, -174, 14);
+  ctx.closePath();
+  ctx.fillStyle = "#48232c";
+  ctx.fill();
+
+  const lowerTeeth = [
+    [-137, 18, 24, 19, -0.12],
+    [-111, 24, 25, 20, -0.07],
+    [-84, 28, 26, 19, -0.03],
+    [-55, 29, 25, 18, 0.04],
+    [-27, 30, 22, 17, 0.07],
+    [4, 30, 24, 17, -0.04],
+    [32, 28, 25, 18, 0.02],
+    [60, 26, 25, 18, 0.08],
+    [88, 23, 24, 19, 0.11],
+    [115, 18, 23, 18, 0.14]
+  ];
+
+  for (const [x, y, tw, th, rotation] of lowerTeeth) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    ctx.beginPath();
+    ctx.moveTo(-tw / 2, -th / 2);
+    ctx.quadraticCurveTo(0, -th * 0.68, tw / 2, -th / 2);
+    ctx.lineTo(tw * 0.39, th * 0.20);
+    ctx.quadraticCurveTo(0, th * 0.45, -tw * 0.41, th * 0.18);
+    ctx.closePath();
+
+    ctx.fillStyle = "#a99b87";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(24, 13, 16, 0.8)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(-162, -43);
+  ctx.quadraticCurveTo(-117, -69, -77, -66);
+  ctx.strokeStyle = "rgba(210, 151, 150, 0.28)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(81, 72);
+  ctx.quadraticCurveTo(130, 62, 159, 37);
+  ctx.strokeStyle = "rgba(198, 129, 132, 0.2)";
   ctx.lineWidth = 2;
   ctx.stroke();
 
   ctx.restore();
 }
 
-function drawMouth(ctx) {
-  ctx.save();
 
-  // Outer lips. The irregular outline avoids a perfect cartoon oval.
-  ctx.beginPath();
-  ctx.moveTo(104, 252);
-  ctx.bezierCurveTo(129, 212, 171, 174, 230, 161);
-  ctx.bezierCurveTo(285, 147, 330, 171, 370, 178);
-  ctx.quadraticCurveTo(400, 184, 430, 178);
-  ctx.bezierCurveTo(470, 171, 515, 147, 570, 161);
-  ctx.bezierCurveTo(629, 174, 671, 212, 696, 252);
-  ctx.bezierCurveTo(680, 298, 645, 334, 601, 363);
-  ctx.bezierCurveTo(555, 393, 510, 414, 459, 421);
-  ctx.quadraticCurveTo(400, 430, 341, 421);
-  ctx.bezierCurveTo(290, 414, 245, 393, 199, 363);
-  ctx.bezierCurveTo(155, 334, 120, 298, 104, 252);
-  ctx.closePath();
 
-  ctx.fillStyle = makeGradient(
-    ctx, 0, 155, 0, 435,
-    [
-      [0, "#4d1e2c"],
-      [0.22, COLORS.lip],
-      [0.57, "#582332"],
-      [0.83, "#3b1722"],
-      [1, "#241018"]
-    ]
-  );
-  ctx.fill();
 
-  // Mouth opening. The top and bottom recede toward the back.
-  ctx.beginPath();
-  ctx.moveTo(135, 250);
-  ctx.bezierCurveTo(179, 216, 246, 202, 303, 214);
-  ctx.quadraticCurveTo(356, 225, 400, 219);
-  ctx.quadraticCurveTo(444, 225, 497, 214);
-  ctx.bezierCurveTo(554, 202, 621, 216, 665, 250);
-  ctx.bezierCurveTo(645, 294, 604, 333, 553, 353);
-  ctx.bezierCurveTo(503, 375, 451, 383, 400, 382);
-  ctx.bezierCurveTo(349, 383, 297, 375, 247, 353);
-  ctx.bezierCurveTo(196, 333, 155, 294, 135, 250);
-  ctx.closePath();
+export function drawWormTooth(ctx, points) {
+  if (!points || points.length < 3) return;
 
-  ctx.fillStyle = makeGradient(
-    ctx, 0, 210, 0, 382,
-    [
-      [0, "#10080e"],
-      [0.40, COLORS.mouth],
-      [0.78, "#130911"],
-      [1, "#29101b"]
-    ]
-  );
-  ctx.fill();
+  const startWidth = 5;
+  const crownWidth = 15;
+  const count = points.length;
 
-  // Darkness at the back of the throat.
-  const throat = ctx.createRadialGradient(400, 275, 5, 400, 278, 155);
-  throat.addColorStop(0, COLORS.mouthDeep);
-  throat.addColorStop(0.72, "#080408");
-  throat.addColorStop(1, "rgba(34, 10, 21, 0.2)");
-
-  ctx.fillStyle = throat;
-  ctx.beginPath();
-  ctx.ellipse(400, 279, 194, 101, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Upper gum: curved, irregular, and behind the upper teeth.
-  ctx.beginPath();
-  ctx.moveTo(145, 237);
-  ctx.bezierCurveTo(208, 208, 265, 210, 313, 222);
-  ctx.lineTo(335, 230);
-  ctx.lineTo(357, 221);
-  ctx.lineTo(378, 231);
-  ctx.lineTo(400, 225);
-  ctx.lineTo(422, 231);
-  ctx.lineTo(443, 221);
-  ctx.lineTo(465, 230);
-  ctx.lineTo(487, 222);
-  ctx.bezierCurveTo(535, 210, 592, 208, 655, 237);
-  ctx.bezierCurveTo(599, 253, 546, 250, 494, 245);
-  ctx.lineTo(452, 250);
-  ctx.lineTo(400, 243);
-  ctx.lineTo(348, 250);
-  ctx.lineTo(306, 245);
-  ctx.bezierCurveTo(254, 250, 201, 253, 145, 237);
-  ctx.closePath();
-
-  ctx.fillStyle = makeGradient(
-    ctx, 0, 210, 0, 254,
-    [
-      [0, "#b76178"],
-      [0.55, COLORS.gum],
-      [1, "#5a1e31"]
-    ]
-  );
-  ctx.fill();
-
-  const upperTeeth = [
-    { x: 165, y: 235, w: 30, h: 45, tilt: -0.32 },
-    { x: 196, y: 229, w: 33, h: 54, tilt: -0.23 },
-    { x: 230, y: 224, w: 35, h: 61, tilt: -0.16 },
-    { x: 267, y: 223, w: 39, h: 67, tilt: -0.09 },
-    { x: 307, y: 225, w: 37, h: 61, tilt: 0.05 },
-    { x: 345, y: 225, w: 34, h: 56, tilt: 0.08 },
-    { x: 369, y: 224, w: 28, h: 53, tilt: -0.04 },
-    { x: 431, y: 224, w: 28, h: 53, tilt: 0.05 },
-    { x: 455, y: 225, w: 34, h: 56, tilt: -0.07 },
-    { x: 493, y: 225, w: 37, h: 61, tilt: -0.05 },
-    { x: 533, y: 223, w: 39, h: 67, tilt: 0.11 },
-    { x: 570, y: 224, w: 35, h: 61, tilt: 0.18 },
-    { x: 604, y: 229, w: 33, h: 54, tilt: 0.24 },
-    { x: 635, y: 235, w: 30, h: 45, tilt: 0.32 }
-  ];
-
-  for (const tooth of upperTeeth) {
-    drawTooth(ctx, tooth, false);
-  }
-
-  // The central gap is the socket where the stretchy tooth begins.
-  // No second crown is drawn here: drawWormTooth supplies the one tooth.
-
-  // Lower gum ridge, following the near edge of the jaw.
-  ctx.beginPath();
-  ctx.moveTo(151, 326);
-  ctx.bezierCurveTo(208, 353, 262, 365, 309, 366);
-  ctx.lineTo(345, 358);
-  ctx.lineTo(374, 368);
-  ctx.lineTo(400, 361);
-  ctx.lineTo(426, 368);
-  ctx.lineTo(455, 358);
-  ctx.lineTo(491, 366);
-  ctx.bezierCurveTo(538, 365, 592, 353, 649, 326);
-  ctx.bezierCurveTo(623, 372, 573, 399, 516, 408);
-  ctx.bezierCurveTo(471, 415, 436, 411, 400, 406);
-  ctx.bezierCurveTo(364, 411, 329, 415, 284, 408);
-  ctx.bezierCurveTo(227, 399, 177, 372, 151, 326);
-  ctx.closePath();
-
-  ctx.fillStyle = makeGradient(
-    ctx, 0, 345, 0, 414,
-    [
-      [0, "#5b2034"],
-      [0.35, COLORS.gum],
-      [0.72, "#a74d65"],
-      [1, "#541b2d"]
-    ]
-  );
-  ctx.fill();
-
-  const lowerTeeth = [
-    { x: 175, y: 352, w: 32, h: 40, tilt: 0.31 },
-    { x: 207, y: 361, w: 34, h: 43, tilt: 0.22 },
-    { x: 242, y: 367, w: 36, h: 45, tilt: 0.16 },
-    { x: 279, y: 371, w: 39, h: 47, tilt: 0.11 },
-    { x: 319, y: 371, w: 37, h: 43, tilt: 0.07 },
-    { x: 356, y: 369, w: 34, h: 42, tilt: 0.03 },
-    { x: 391, y: 368, w: 29, h: 40, tilt: -0.02 },
-    { x: 421, y: 368, w: 29, h: 40, tilt: 0.02 },
-    { x: 451, y: 369, w: 34, h: 42, tilt: -0.03 },
-    { x: 488, y: 371, w: 37, h: 43, tilt: -0.07 },
-    { x: 528, y: 371, w: 39, h: 47, tilt: -0.11 },
-    { x: 565, y: 367, w: 36, h: 45, tilt: -0.16 },
-    { x: 600, y: 361, w: 34, h: 43, tilt: -0.22 },
-    { x: 632, y: 352, w: 32, h: 40, tilt: -0.31 }
-  ];
-
-  for (const tooth of lowerTeeth) {
-    drawTooth(ctx, tooth, true);
-  }
-
-  // Slight gum folds and natural shadows, not decorative cartoon lines.
-  ctx.strokeStyle = "rgba(38, 8, 22, 0.48)";
-  ctx.lineWidth = 3;
-  ctx.lineCap = "round";
-
-  ctx.beginPath();
-  ctx.moveTo(190, 245);
-  ctx.quadraticCurveTo(230, 257, 270, 250);
-  ctx.moveTo(530, 250);
-  ctx.quadraticCurveTo(570, 257, 610, 245);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(210, 350);
-  ctx.quadraticCurveTo(260, 378, 306, 378);
-  ctx.moveTo(494, 378);
-  ctx.quadraticCurveTo(540, 378, 590, 350);
-  ctx.stroke();
-
-  // Moist lip highlights are subdued and uneven.
-  ctx.beginPath();
-  ctx.moveTo(119, 248);
-  ctx.bezierCurveTo(165, 195, 229, 174, 285, 185);
-  ctx.quadraticCurveTo(330, 196, 363, 196);
-  ctx.strokeStyle = "rgba(205, 121, 139, 0.45)";
-  ctx.lineWidth = 5;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(436, 196);
-  ctx.quadraticCurveTo(470, 196, 515, 185);
-  ctx.bezierCurveTo(571, 174, 635, 195, 681, 248);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(166, 346);
-  ctx.bezierCurveTo(229, 397, 284, 412, 331, 411);
-  ctx.moveTo(469, 411);
-  ctx.bezierCurveTo(516, 412, 571, 397, 634, 346);
-  ctx.strokeStyle = "rgba(194, 105, 126, 0.35)";
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function smoothClosedPath(ctx, left, right) {
-  if (left.length < 2) return;
-
-  ctx.beginPath();
-  ctx.moveTo(left[0].x, left[0].y);
-
-  for (let i = 1; i < left.length - 1; i++) {
-    const midX = (left[i].x + left[i + 1].x) / 2;
-    const midY = (left[i].y + left[i + 1].y) / 2;
-    ctx.quadraticCurveTo(left[i].x, left[i].y, midX, midY);
-  }
-
-  const lastLeft = left[left.length - 1];
-  ctx.lineTo(lastLeft.x, lastLeft.y);
-
-  for (let i = right.length - 1; i > 0; i--) {
-    const midX = (right[i].x + right[i - 1].x) / 2;
-    const midY = (right[i].y + right[i - 1].y) / 2;
-    ctx.quadraticCurveTo(right[i].x, right[i].y, midX, midY);
-  }
-
-  ctx.lineTo(right[0].x, right[0].y);
-  ctx.closePath();
-}
-
-export function drawWormTooth(ctx, points, options = {}) {
-  const { showTooth = true } = options;
-  if (points.length < 2 || !showTooth) return;
+  const widths = points.map((_, i) => {
+    const t = i / (count - 1);
+    return startWidth + crownWidth * Math.pow(Math.sin(Math.PI * t), 0.8);
+  });
 
   const left = [];
   const right = [];
 
-  const startWidth = 8;
-  const crownWidth = 24;
-
-  for (let i = 0; i < points.length; i++) {
+  for (let i = 0; i < count; i++) {
     const p = points[i];
     const previous = points[Math.max(0, i - 1)];
-    const next = points[Math.min(points.length - 1, i + 1)];
+    const next = points[Math.min(count - 1, i + 1)];
 
     const dx = next.x - previous.x;
     const dy = next.y - previous.y;
@@ -383,53 +520,99 @@ export function drawWormTooth(ctx, points, options = {}) {
 
     const nx = -dy / length;
     const ny = dx / length;
-    const t = i / (points.length - 1);
-
-    const toothProfile = Math.sin(Math.PI * Math.pow(t, 0.8));
-    const width = startWidth + crownWidth * toothProfile;
+    const halfWidth = widths[i] / 2;
 
     left.push({
-      x: p.x + nx * width / 2,
-      y: p.y + ny * width / 2
+      x: p.x + nx * halfWidth,
+      y: p.y + ny * halfWidth
     });
 
     right.push({
-      x: p.x - nx * width / 2,
-      y: p.y - ny * width / 2
+      x: p.x - nx * halfWidth,
+      y: p.y - ny * halfWidth
     });
   }
 
-  smoothClosedPath(ctx, left, right);
+  // Draw a smooth outline through the strand's width points.
+  function traceSmoothSide(side) {
+    ctx.moveTo(side[0].x, side[0].y);
 
-  ctx.fillStyle = COLORS.tooth;
-  ctx.fill();
+    for (let i = 1; i < side.length - 1; i++) {
+      const midpointX = (side[i].x + side[i + 1].x) / 2;
+      const midpointY = (side[i].y + side[i + 1].y) / 2;
 
-  ctx.strokeStyle = COLORS.toothShade;
-  ctx.lineWidth = 2;
+      ctx.quadraticCurveTo(
+        side[i].x,
+        side[i].y,
+        midpointX,
+        midpointY
+      );
+    }
+
+    const last = side[side.length - 1];
+    ctx.lineTo(last.x, last.y);
+  }
+
+  ctx.save();
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
-  ctx.stroke();
+
+  const gradient = ctx.createLinearGradient(
+    points[0].x - 10,
+    points[0].y,
+    points[count - 1].x + 10,
+    points[count - 1].y
+  );
+
+  gradient.addColorStop(0, "#fff0d5");
+  gradient.addColorStop(0.35, "#e7cda8");
+  gradient.addColorStop(0.7, "#c5a17e");
+  gradient.addColorStop(1, "#f2dfbd");
 
   ctx.beginPath();
+  traceSmoothSide(left);
 
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
+  // Round the tip instead of making a sharp folded corner.
+  const tip = points[count - 1];
+  ctx.quadraticCurveTo(
+    tip.x,
+    tip.y,
+    right[count - 1].x,
+    right[count - 1].y
+  );
+
+  for (let i = right.length - 2; i >= 0; i--) {
+    const current = right[i];
+    const previous = right[Math.max(0, i - 1)];
 
     if (i === 0) {
-      ctx.moveTo(p.x - 2, p.y);
+      ctx.lineTo(current.x, current.y);
     } else {
-      const previous = points[i - 1];
-      ctx.lineTo(
-        (previous.x + p.x) / 2 - 2,
-        (previous.y + p.y) / 2
+      ctx.quadraticCurveTo(
+        current.x,
+        current.y,
+        (current.x + previous.x) / 2,
+        (current.y + previous.y) / 2
       );
     }
   }
 
-  ctx.strokeStyle = COLORS.toothHighlight;
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
+  // Close the root with a rounded curve.
+  ctx.quadraticCurveTo(
+    points[0].x,
+    points[0].y,
+    left[0].x,
+    left[0].y
+  );
+
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(74, 42, 37, 0.3)";
+  ctx.lineWidth = 1.2;
   ctx.stroke();
+
+  ctx.restore();
 }
 
-export { COLORS };
